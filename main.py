@@ -1,4 +1,3 @@
-from slackclient import SlackClient
 import os,time,logging,re
 
 slack_token=os.getenv('SLACK_TOKEN_TEAMET')
@@ -6,6 +5,7 @@ sc=SlackClient(slack_token)
 logging.basicConfig(filename='main.log',level=logging.INFO)
 logging.info('start main.py')
 
+from slackclient import SlackClient
 
 sudo=""
 "\n"
