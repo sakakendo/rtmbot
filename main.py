@@ -1,8 +1,11 @@
 from slackclient import SlackClient
-import os,time
+import os,time,logging,re
 
 slack_token=os.getenv('SLACK_TOKEN_TEAMET')
 sc=SlackClient(slack_token)
+logging.basicConfig(filename='main.log',level=logging.INFO)
+logging.info('start main.py')
+
 
 sudo=""
 "\n"
@@ -16,26 +19,19 @@ sudo=""
 ""
 
 def reply(d):
-    if 'sudo' == d.get('text'):
-        sc.api_call(
+    pattern=['sudo','Add files via upload']
+    for pat in pattern:
+        if re.match(pat,d.get('text')):
+            sc.api_call(
                 'chat.postMessage',
                 channel=d['channel'],
-                text='sudo'+sudo)
-#                thread_ts=d['ts'])
-    elif 'Add files' in d['text']:
-        sc.api_call(
-                'chat.postMessage',
-                channel=d['channel'],
-                text='found Add files',
-                thread_ts=d['ts'])
-    else:
-        sc.api_call(
-                'chat.postMessage',
-                channel=d['channel'],
-                text='default reply. message is '+d['text'],
-                thread_ts=d['ts'])
-
-
+                text=pat+' : '+d.get('text'))
+            return None
+    sc.api_call(
+        'chat.postMessage',
+        channel=d['channel'],
+        text='pattern not found',
+        thread_ts=d.get('ts'))
 
 
 if sc.rtm_connect(with_team_state=True):
@@ -47,12 +43,9 @@ if sc.rtm_connect(with_team_state=True):
             for d in data:
                 print(d)
                 if d['type'] == 'message' and d.get('subtype') is None:
-                    #when message is simple message
                     if d.get('username') is 'sakakendobot' :
-                        #when message is not bot-self
                         print('this is bot message')
                     else:
-                        #wehn message is simpe and not by bot-self.reply
                         print('reply to thread',d['type'],d['ts'])
                         reply(d)
                 elif d['type'] == 'hello':
