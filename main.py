@@ -1,6 +1,6 @@
 import os,time,logging,re
 
-logging.basicConfig(filename='main.log',level=logging.INFO)
+logging.basicConfig(filename='info.log',level=logging.INFO)
 logging.info('start main.py')
 
 from slackclient import SlackClient
@@ -19,21 +19,32 @@ sudo=""
 "\n"
 ""
 
-def reply(d):
-    pattern=['sudo','Add files via upload']
-    for pat in pattern:
-        if re.match(pat,d.get('text')):
-            sc.api_call(
-                'chat.postMessage',
-                channel=d['channel'],
-                text=pat+' : '+d.get('text'))
-            return None
-    sc.api_call(
-        'chat.postMessage',
-        channel=d['channel'],
-        text='pattern not found',
-        thread_ts=d.get('ts'))
+def id2name(d):
+#    print('id2name',d)#,split(uid)[0])
+    if d.get('user'):
+        ret=sc.api_call('users.info',user=d.get('user'))
+        logging.info('this is user'+ret.get('user').get('name'))
+        return ret.get('user').get('name')
+    elif d.get('bot_id'):
+        ret=sc.api_call('bots.info',bot=d.get('bot_id'))
+        logging.info('this is bot'+ret.egt("bot").get("name"))
+        return ret.egt("bot").get("name")
+    return None
 
+def extract(d):
+    attach=d.get('attachments')
+    if attach is not None and len(attach) > 0 : text=attach[0].get('text')
+    print(text)
+    return text
+
+def reply(d):
+#    print('reply',d)
+    print('name : ',id2name(d))
+    if id2name(d) == 'github':
+        if extract(d) is not None and re.search('Add files via upload',extract(d)):
+            sc.api_call('chat.postMessage',channel=d.get('channel'),text='you should change commit message')
+
+            
 
 if sc.rtm_connect(with_team_state=True):
     while True:
@@ -47,7 +58,6 @@ if sc.rtm_connect(with_team_state=True):
                     if d.get('username') is 'sakakendobot' :
                         print('this is bot message')
                     else:
-                        print('reply to thread',d['type'],d['ts'])
                         reply(d)
                 elif d['type'] == 'hello':
                     sc.api_call(
